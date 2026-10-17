@@ -49,6 +49,8 @@ Custom intervals and independently fetched, confirmed higher-timeframe studies.
   snapshots are not invented by a live feed.
 - Existing native feed calls, legacy indicator providers and saved-state
   formats remain supported. No runtime dependencies are added.
+- The reference server accepts bounded history windows before 1970, preserving
+  full-history ranges and date navigation with explicit source requests.
 
 ### Size
 

@@ -727,7 +727,8 @@ test('the status line and the legend use names, not ids and codes', async ({ pag
   await page.mouse.click(box.x + box.width * 0.55, box.y + box.height * 0.25);
   await expect(page.locator('#status')).toContainText('Trend Line');
   await expect(page.locator('#status')).not.toContainText('trend-line');
-  await page.getByRole('button', { name: '1W', exact: true }).click();
+  await page.locator('#timeframe-menu').click();
+  await page.locator('[data-pick-interval="1wk"]').click();
   await page.waitForFunction(() => (window as any).__oac.app.req.interval === '1wk' && !(window as any).__oac.app.loading);
   const params = await page.evaluate(() => (window as any).__oac.app.symbolLegend.options().params as string);
   expect(params).toMatch(/^1W /);

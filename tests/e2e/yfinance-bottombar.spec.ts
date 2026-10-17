@@ -93,7 +93,7 @@ test('a range loads the interval and period its sessions need, then places the l
   await chooseSymbol(page, 'RELIANCE.NS');
   await page.locator('.host-bottombar .oac-bottombar__range[data-range="1D"]').click();
   await expect.poll(() => app(page, 'app.bottombar.controls.range()'), { timeout: 15_000 }).toBe('1D');
-  expect(await app(page, 'app.req.interval + "/" + app.req.period')).toBe('5m/1mo');
+  expect(await app(page, 'app.req.interval + "/" + app.req.period')).toBe('5m/5d');
   await expect(page.locator('.host-bottombar .oac-bottombar__range[data-range="1D"]')).toHaveAttribute('aria-pressed', 'true');
   // The view runs from the 09:15 open of the last bar's session to that bar.
   // Early in the day the session holds fewer bars than the closest zoom can

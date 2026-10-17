@@ -112,6 +112,7 @@ FIXTURE_MAX_DAYS = 20 * 366
 # A timestamp past this is not a time anyone can chart, it is a typo or a
 # millisecond value; refusing it early keeps the source from being asked for
 # a window in the year 50000.
+MIN_EPOCH = -2208988800  # 1900-01-01, matching the daily source's earliest history
 MAX_EPOCH = 4102444800  # 2100-01-01
 
 # A range that ends in the past and whose last possible bar has closed cannot
@@ -162,11 +163,11 @@ def _epoch_param(q: dict, key: str) -> int | None:
     raw = _first(q, key)
     if raw is None or raw == "":
         return None
-    if not re.fullmatch(r"[0-9]{1,10}", raw):
+    if not re.fullmatch(r"-?[0-9]{1,10}", raw):
         raise ApiError(400, "bad_range", f"{key} must be UTC seconds, got {raw!r}")
     value = int(raw)
-    if value <= 0 or value >= MAX_EPOCH:
-        raise ApiError(400, "bad_range", f"{key} must be UTC seconds before the year 2100, got {raw!r}")
+    if value < MIN_EPOCH or value >= MAX_EPOCH:
+        raise ApiError(400, "bad_range", f"{key} must be UTC seconds from 1900 up to the year 2100, got {raw!r}")
     return value
 
 
@@ -986,6 +987,16 @@ class SelfTest(unittest.TestCase):
         return status, hdrs, json.loads(body)
 
     # -- bars ------------------------------------------------------------------
+    def test_history_windows_accept_pre_epoch_dates_and_keep_finite_bounds(self):
+        for start in (-2208988800, -86400, 0):
+            status, _, bars = self.json(f"/api/history?symbol=AAPL&interval=1d&from={start}&to={start + 7 * DAY}")
+            self.assertEqual(status, 200, bars)
+            self.assertGreater(len(bars), 0)
+            self.assertTrue(all(start <= bar["time"] <= start + 7 * DAY for bar in bars))
+        for value in ("-2208988801", "4102444800", "--1", "1.5", "1e9"):
+            status, _, body = self.json(f"/api/history?symbol=AAPL&from={value}")
+            self.assertEqual((status, body["code"]), (400, "bad_range"), value)
+
     def test_history_returns_bars_in_the_chart_shape(self):
         status, hdrs, bars = self.json("/api/history?symbol=AAPL&interval=1d&period=1y")
         self.assertEqual(status, 200)
@@ -1175,7 +1186,7 @@ class SelfTest(unittest.TestCase):
         self.assertEqual(status, 200)
 
     def test_range_is_validated(self):
-        for q in ("to=abc", "from=-5", "to=1.5", "from=99999999999", "from=1700000000&to=1700000000",
+        for q in ("to=abc", "from=-2208988801", "to=1.5", "from=99999999999", "from=1700000000&to=1700000000",
                   "from=1700000001&to=1700000000"):
             status, _, body = self.json("/api/history?symbol=AAPL&" + q)
             self.assertEqual((status, body["code"]), (400, "bad_range"), q)

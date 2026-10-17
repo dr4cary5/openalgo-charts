@@ -83,9 +83,14 @@ const painted = async (page: Page) => { await frames(page); return page.evaluate
   return { magenta, cyan };
 }); };
 
-/** Switch the interval with the toolbar's pill, and wait for the rebuilt chart to draw it. */
+/** Use a favorite when present, otherwise choose the interval from the grouped menu. */
 async function switchTo(page: Page, label: string, code: string): Promise<void> {
-  await page.locator('#shellbar .pills button', { hasText: new RegExp(`^${label}$`) }).first().click();
+  const favorite = page.locator('#shellbar .pills button', { hasText: new RegExp(`^${label}$`) }).first();
+  if (await favorite.count()) await favorite.click();
+  else {
+    await page.locator('#timeframe-menu').click();
+    await page.locator(`[data-pick-interval="${code}"]`).click();
+  }
   await page.waitForFunction((c) => {
     const app = (window as any).__oac?.app;
     return app?.req?.interval === c && !app.loading && app.draw?.interval?.() === c && app.currentBars?.length > 0;
