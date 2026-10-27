@@ -370,7 +370,12 @@ async function edgesAndResize(page: Page, info: { outputPath(name: string): stri
   await page.screenshot({ path: info.outputPath(`${prefix}all-after-resize.png`) });
 }
 
+// Fifteen throws, a resize and a full-canvas pixel scan after each step. It
+// takes about 6 s alone at a device pixel ratio of two, but CI's WebKit shares
+// its runner and reached 30 s with every check still passing: both attempts
+// timed out on the next step, the retry further along than the first.
 test('a pinned note, table and box stay whole on the plot and clickable at every edge and after a resize', async ({ page }, info) => {
+  test.setTimeout(120_000);
   const errors = await mountEdges(page);
   await edgesAndResize(page, info, 'edge-');
   expect(errors).toEqual([]);
@@ -380,6 +385,7 @@ test.describe('the whole drawing at a device pixel ratio of two', () => {
   test.use({ deviceScaleFactor: 2 });
 
   test('a pinned note, table and box stay whole on the plot and clickable at every edge and after a resize', async ({ page }, info) => {
+    test.setTimeout(120_000);
     const errors = await mountEdges(page);
     expect(await page.evaluate(() => window.devicePixelRatio)).toBe(2);
     await edgesAndResize(page, info, 'dpr2-edge-');
