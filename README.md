@@ -25,7 +25,7 @@ with no runtime dependencies.
 npm install openalgo-charts
 ```
 
-Current version: **2.6.8**. Volume studies work on price-driven charts: Renko, range bars, line break and point and figure elements now carry the volume traded while they formed, so On-Balance Volume, VWAP and a host's own volume study compute on them as they do on candles. Higher-timeframe studies warm up across weekends and holidays, and OHLC bars grow bolder as you zoom in. Time-based charts are otherwise unchanged, and the development toolchain moves past its open security advisories. 2.6.7 added compatible custom intervals and independently fetched, confirmed higher-timeframe studies.
+Current version: **2.6.9**, a security release for the build toolchain and the documentation site; the library is the 2.6.8 code. 2.6.8 made volume studies work on price-driven charts: Renko, range bars, line break and point and figure elements now carry the volume traded while they formed, so On-Balance Volume, VWAP and a host's own volume study compute on them as they do on candles. Higher-timeframe studies warm up across weekends and holidays, and OHLC bars grow bolder as you zoom in. Time-based charts are otherwise unchanged, and the development toolchain moves past its open security advisories. 2.6.7 added compatible custom intervals and independently fetched, confirmed higher-timeframe studies.
 
 2.6.4 was an order flow release: a footprint finds the imbalances beside a row that never traded, prints volume shaded by delta, alerts once when price comes back to a zone, extends only the zone kinds you pick, and takes a colour for each of its parts or one of six named themes; the website gains an Order flow page of live footprint and market profile examples. 2.6.3 was a finish release: finer glyphs at one line weight, a drawing rail that folds away, a smoother wheel and trackpad zoom, a widget whose drag keeps the price scale fitting, and a log scale that fills the pane. 2.6.2 was a fix for the bottom bar's ranges and Go to, which reported missing history across a weekend or another gap no session trades in. 2.6.1 was order flow analytics for the footprint (trade classification, a trade size filter, imbalance and delta views, zones, unfinished auctions, delta flips and session statistics), rows aligned on the even boundary, Renko and point and figure sizing from price or the ATR, and settings dialogs for both chart types in the widget and the reference host. 2.6.0 was analysis depth and a stricter API: the chart applies Heikin Ashi, Renko, range bars, line break, point and figure and Kagi to the bars you feed, live, with each study on the elements or the underlying bars; seven new built-ins and a timeframe input on 29 of them; symbol search through the OpenAlgo feed; rich event details with host actions; a typed event map for `chart.on`; a classic-script build of every tier and `require()` of the ESM files; and declarations that hold for a host compiling with both strict flags. 2.5.10 was the persistence, saved layouts and chart grid release.
 See the [changelog](./CHANGELOG.md) for release notes.
@@ -119,7 +119,7 @@ You can also load the library from a CDN in a plain HTML page:
 ```html
 <div id="chart" style="width:100vw;height:100vh"></div>
 <script type="module">
-  import { createChart, generateBars } from 'https://unpkg.com/openalgo-charts@2.6.8/dist/openalgo-charts.mjs';
+  import { createChart, generateBars } from 'https://unpkg.com/openalgo-charts@2.6.9/dist/openalgo-charts.mjs';
   const chart = createChart(document.getElementById('chart'), { timezone: 'Asia/Kolkata' });
   chart.addSeries('candlestick').setData(generateBars(1700000000, 200, 3600));
   chart.fitContent();
@@ -181,7 +181,7 @@ Unused optional tiers stay out of the base chart download.
 
 | Import | Contents | Brotli |
 |---|---|---|
-| `openalgo-charts` | Engine, 13 chart types, panes and scales, custom indicator registry, primitives, alerts, replay, comparisons, chart linking, state, feeds, bar cache, trading overlays, CSV and SVG export | 140.04 kB |
+| `openalgo-charts` | Engine, 13 chart types, panes and scales, custom indicator registry, primitives, alerts, replay, comparisons, chart linking, state, feeds, bar cache, trading overlays, CSV and SVG export | 140.14 kB |
 | `openalgo-charts/indicators` | 112 built-in indicators, calculation helpers and helpers for studies that use external data | 44.85 kB |
 | `openalgo-charts/draw` | 87 drawing tools + a headless drawing controller, clipboard, settings schema, level palette, freehand geometry and SVG icons | 58.44 kB |
 | `openalgo-charts/transform` | Heikin Ashi, Renko, Range bars, Line Break, Point &amp; Figure, Kagi, and symbol arithmetic (`AAPL/MSFT`) | 6.38 kB |
@@ -191,7 +191,7 @@ Unused optional tiers stay out of the base chart download.
 | `openalgo-charts/widget` | `createWidget`: toolbar, bottom bar, Data, Objects, Watchlist and News dock, account summary, symbol search, dialogs, mobile controls, a shortcuts editor, saved layouts, the chart grid (`createChartGrid`) and optional persistence in IndexedDB | 128.98 kB |
 | `openalgo-charts/workspace` | Validated workspace and indicator-template documents, named watchlists, named catalogs with revision checks, asynchronous storage and an IndexedDB adapter; no DOM | 11.73 kB |
 
-Everything together is **435.11 kB Brotli**; a widget terminal with built-in indicators (base + draw + indicators + widget) is 372.31 kB. The widget's eight first-use parts (the shortcuts editor, the Layouts menu, the templates list, the chart data dialog, the chart type settings dialog, the grid bar and its menus, and the IndexedDB store) add 21.00 kB in files of their own, fetched only when a widget first uses one. The nine classic-script files together are 448.68 kB. Figures are measured from the 2.6.8 release build. The trade tier is 16.88 kB on its own; base + trade costs 156.92 kB. Sizes use decimal kB.
+Everything together is **435.21 kB Brotli**; a widget terminal with built-in indicators (base + draw + indicators + widget) is 372.41 kB. The widget's eight first-use parts (the shortcuts editor, the Layouts menu, the templates list, the chart data dialog, the chart type settings dialog, the grid bar and its menus, and the IndexedDB store) add 21.00 kB in files of their own, fetched only when a widget first uses one. The nine classic-script files together are 448.70 kB. Figures are measured from the 2.6.9 release build. The trade tier is 16.88 kB on its own; base + trade costs 157.02 kB. Sizes use decimal kB.
 
 ## What's built
 
@@ -517,8 +517,8 @@ Enforced in CI by [`size-limit`](./.size-limit.json). Nothing is excluded, becau
 
 | Bundle | Limit | Actual |
 |---|---|---|
-| Base engine | 140.11 kB | 140.04 kB |
-| Base + trade | 156.99 kB | 156.92 kB |
+| Base engine | 140.14 kB | 140.14 kB |
+| Base + trade | 157.02 kB | 157.02 kB |
 | Indicators tier | 44.86 kB | 44.85 kB |
 | Draw tier | 58.45 kB | 58.44 kB |
 | Transform tier | 6.39 kB | 6.38 kB |
@@ -526,10 +526,10 @@ Enforced in CI by [`size-limit`](./.size-limit.json). Nothing is excluded, becau
 | WebGL2 tier | 6.99 kB | 6.99 kB |
 | Widget tier | 128.98 kB | 128.98 kB |
 | Widget first-use parts (eight files beside the widget tier) | 21.00 kB | 21.00 kB |
-| Widget terminal (base + draw + indicators + widget) | 372.39 kB | 372.31 kB |
+| Widget terminal (base + draw + indicators + widget) | 372.41 kB | 372.41 kB |
 | Workspace tier | 11.73 kB | 11.73 kB |
-| Script tags (the nine classic-script files) | 448.69 kB | 448.68 kB |
-| **Everything** | 435.12 kB | 435.11 kB |
+| Script tags (the nine classic-script files) | 448.70 kB | 448.70 kB |
+| **Everything** | 435.22 kB | 435.21 kB |
 
 ## Documentation
 
@@ -601,7 +601,7 @@ npm run verify     # lint + types + cycles + unused exports + unit + endurance h
 
 ## Status &amp; limitations
 
-Version **2.6.8**. All engine build phases are implemented. Upgrading a 1.9.x host: [Migrating to 2.0](./docs/migrating-to-2.md).
+Version **2.6.9**. All engine build phases are implemented. Upgrading a 1.9.x host: [Migrating to 2.0](./docs/migrating-to-2.md).
 
 Known gaps, stated plainly:
 
