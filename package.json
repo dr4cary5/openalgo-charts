@@ -1,6 +1,6 @@
 {
   "name": "openalgo-charts",
-  "version": "2.6.7",
+  "version": "2.6.8",
   "description": "From-scratch, dependency-free canvas charting engine for OpenAlgo: professional-grade interactive rendering, advanced on-chart trading, and a one-call widget tier that adds the toolbar, drawing rail, dialogs and shortcuts.",
   "license": "Apache-2.0",
   "author": "marketcalls",
@@ -146,7 +146,7 @@
     "typedoc": "0.27.6",
     "typescript": "5.7.3",
     "typescript-eslint": "^8.69.0",
-    "vitest": "^4.1.11",
+    "vitest": "^4.1.12",
     "vue": "^3.5.43"
   }
 }

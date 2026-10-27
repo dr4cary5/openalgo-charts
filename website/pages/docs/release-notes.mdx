@@ -8,6 +8,46 @@ description: Version history for OpenAlgo Charts.
 The full, authoritative changelog lives in
 [`CHANGELOG.md`](https://github.com/marketcalls/openalgo-charts/blob/master/CHANGELOG.md).
 
+## 2.6.8
+
+2026-10-27
+
+Volume studies on price-driven charts, and the development toolchain past its open security advisories.
+
+### Fixed
+
+- **Volume studies on Renko, range bar, line break and point and figure
+  charts.** Their elements carried no volume, so On-Balance Volume drew a flat
+  zero, VWAP drew nothing and a host's own study reading `bar.volume` (a Weis
+  Wave, for example) read nothing, while the same studies worked on every
+  time-based chart. Each element now carries the volume traded while it
+  formed: the sum of the source bars pushed since the element before it, all
+  of it on the first element a bar completes and 0 on the rest, so a running
+  total such as On-Balance Volume keeps counting. A point and figure reversal
+  bar counts toward the column it opens, and a range bar or column still
+  forming carries what has traded in it so far. Live ticks and history give
+  the same elements.
+- A source that reports no volume, such as an index, leaves elements without
+  one, exactly as before. Heikin Ashi still carries each bar's own volume.
+  Kagi keeps its line thickness in `volume`, which its renderer reads, so a
+  volume study on a Kagi chart still needs `barSource: 'underlying'`.
+- Time-based charts are unchanged. A host that sums raw volume under each
+  element for its own volume pane can now read the element's `volume`
+  instead (every transform but Kagi).
+
+### Security
+
+- Development dependencies only: the published package still has no runtime
+  dependencies, so no installed chart was exposed. `vitest` 4.1.11 to 4.1.12
+  with `@vitest/mocker` (GHSA-qxg6-89mg-rqv8, GHSA-xp26-3454-mjgp), `vite`
+  8.2.2 to 8.2.4 (GHSA-587h-7wmj-h5pm, GHSA-9jrq-w75r-8gcw,
+  GHSA-rq7h-c2jc-7f22, GHSA-vfpm-58rq-9qcg, GHSA-r825-w8mm-5pxw,
+  GHSA-698v-4r3x-3vcv) and `markdown-it` 14.3.2 to 14.3.3
+  (GHSA-gfr2-rv44-r23c, GHSA-vfgh-jcmw-g37q). npm's resolver stops on an
+  optional peer cycle in vite 8, so the lockfile entries were moved to the
+  patched releases directly from the registry's manifests; nothing else in
+  the tree changed.
+
 ## 2.6.7
 
 2026-10-17
