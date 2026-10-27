@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { volumePoint, volumeAverage, volumeAveragePoint, volumeValues } from '../src/volume.js';
+import { describe, expect, it, vi } from 'vitest';
+import { initVolume, refreshVolume, volumePoint, volumeAverage, volumeAveragePoint, volumeValues } from '../src/volume.js';
 
 describe('reference volume', () => {
   it('matches candle overrides and previous-close direction', () => {
@@ -29,5 +29,52 @@ describe('reference volume', () => {
     expect(volumeValues({ 'volume.maPeriod': 501 })['volume.maPeriod']).toBe(500);
     expect(volumeValues({ 'volume.maPeriod': NaN })['volume.maPeriod']).toBe(20);
     expect(volumeValues({ 'volume.maStyle': 'invalid' })['volume.maStyle']).toBe('solid');
+  });
+});
+
+describe('volume pane on a transformed chart', () => {
+  // A tick on a chart whose transform forms elements at times of its own can
+  // complete several bricks or withdraw a provisional one, but arrives as one
+  // update, so the pane takes the whole histogram again rather than its last
+  // point, which would leave a gap or a stale bar on the shared axis.
+  const run = (transform) => {
+    const bars = [1, 2, 3].map(i => ({ time: i, open: i, high: i, low: i, close: i + 0.5, volume: i * 10 }));
+    const series = () => ({ applyOptions: vi.fn(), setData: vi.fn(), update: vi.fn() });
+    const app = {
+      chart2: {
+        primaryBars: () => bars,
+        theme: () => ({ upColor: '#0a0', downColor: '#a00' }),
+        primarySeriesInfo: () => ({ style: {} }),
+        primarySeries: () => ({}),
+        seriesTransform: () => (transform ? { type: transform } : null),
+      },
+      volume2: series(), volumeMA2: series(), volLegend2: null, volumeReadings2: new Map(),
+    };
+    // initVolume listens for theme changes on the page; these tests have none.
+    vi.stubGlobal('document', { addEventListener: () => {} });
+    try {
+      initVolume(app);
+      refreshVolume(2, { kind: 'update', time: 3 });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+    return app.volume2;
+  };
+
+  it('rebuilds the histogram on a live update for Renko and the other element-forming transforms', () => {
+    for (const kind of ['renko', 'range-bars', 'line-break', 'point-figure']) {
+      const histogram = run(kind);
+      expect(histogram.update, kind).not.toHaveBeenCalled();
+      expect(histogram.setData, kind).toHaveBeenCalledTimes(1);
+      expect(histogram.setData.mock.calls[0][0].map(point => point.close), kind).toEqual([10, 20, 30]);
+    }
+  });
+
+  it('updates the last point in place on candles and Heikin Ashi', () => {
+    for (const kind of [null, 'heikin-ashi']) {
+      const histogram = run(kind);
+      expect(histogram.setData, String(kind)).not.toHaveBeenCalled();
+      expect(histogram.update.mock.calls[0][0], String(kind)).toMatchObject({ time: 3, close: 30 });
+    }
   });
 });

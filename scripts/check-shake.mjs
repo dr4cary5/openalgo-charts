@@ -278,7 +278,10 @@ const BUNDLE = new URL('../dist/openalgo-charts.mjs', import.meta.url).pathname.
 // 2.6.7 adds optional confirmed-bar availability context to charts. Source
 // planning, resampling and the custom interval UI still shake out. The final
 // build measures 89568 bytes, 131 more than 2.6.6; retain the exact ceiling.
-const LIMIT_BYTES = 89568;
+// 2.6.8 draws an OHLC bar's stroke at a weight that follows the zoom, which
+// a plain chart can draw. The final build measures 89611 bytes, 43 more than
+// 2.6.7; retain the exact ceiling.
+const LIMIT_BYTES = 89611;
 
 // Absent from a chart-only build. Each is a string that appears in the adapter
 // source and nowhere in the rendering core.

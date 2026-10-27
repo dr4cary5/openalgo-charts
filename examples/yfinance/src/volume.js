@@ -122,7 +122,14 @@ export function refreshVolume(pane = 1, change) {
   histogram.applyOptions({ visible: settings['volume.visible'] });
   average.applyOptions({ visible: settings['volume.visible'] && settings['volume.showMA'],
     color: settings['volume.maColor'], lineWidth: settings['volume.maWidth'], lineStyle: settings['volume.maStyle'] });
-  if (change?.kind === 'update' && bars.length) {
+  // A transform that forms elements at times of its own reports a tick as one
+  // update, but the tick can complete several bricks or withdraw a provisional
+  // one, so writing the last point alone would leave a gap or a stale bar on
+  // the shared axis. Those charts take the whole histogram again; Heikin Ashi
+  // keeps one candle per bar and updates in place like candles.
+  const kind = chart.seriesTransform?.(chart.primarySeries?.())?.type;
+  const ownTimes = kind !== undefined && kind !== 'heikin-ashi';
+  if (change?.kind === 'update' && bars.length && !ownTimes) {
     histogram.update(volumePoint(bars.at(-1), bars.at(-2)?.close, style, direction));
     if (settings['volume.showMA']) {
       const window = bars.slice(-period).map(bar => ({ time: bar.time, close: bar.volume ?? NaN }));

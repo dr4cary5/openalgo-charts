@@ -8,6 +8,111 @@ description: Version history for OpenAlgo Charts.
 The full, authoritative changelog lives in
 [`CHANGELOG.md`](https://github.com/marketcalls/openalgo-charts/blob/master/CHANGELOG.md).
 
+## 2.6.8
+
+2026-10-27
+
+Volume studies on price-driven charts, higher-timeframe studies after a weekend, bar charts that follow the zoom, and the development toolchain past its open security advisories.
+
+### Fixed
+
+- **Volume studies on Renko, range bar, line break and point and figure
+  charts.** Their elements carried no volume, so On-Balance Volume drew a flat
+  zero, VWAP drew nothing and a host's own study reading `bar.volume` (a Weis
+  Wave, for example) read nothing, while the same studies worked on every
+  time-based chart. Each element now carries the volume traded while it
+  formed: the sum of the source bars pushed since the element before it, all
+  of it on the first element a bar completes and 0 on the rest, so a running
+  total such as On-Balance Volume keeps counting. A point and figure reversal
+  bar counts toward the column it opens, and a range bar or column still
+  forming carries what has traded in it so far. Live ticks and history give
+  the same elements.
+- A source that reports no volume, such as an index, leaves elements without
+  one, exactly as before. Heikin Ashi still carries each bar's own volume.
+  Kagi keeps its line thickness in `volume`, which its renderer reads, so a
+  volume study on a Kagi chart still needs `barSource: 'underlying'`.
+- Time-based charts are unchanged. A host that sums raw volume under each
+  element for its own volume pane can now read the element's `volume`
+  instead (every transform but Kagi).
+
+- **Higher-timeframe studies after a weekend or holiday.** A study on
+  another timeframe (a 15 minute EMA on a 5 minute chart) warms up from
+  history fetched in windows of a few hours, and gave up with "Insufficient
+  confirmed history" after four empty windows. A weekend is many of those, so
+  whenever the chart's history began right after a weekend or a holiday the
+  study showed that error instead of its line. An empty window now doubles
+  the next, and history is only declared missing when the empty stretch also
+  spans more than 30 days, so weekends, long weekends and holidays are
+  crossed in a few reads while a source with nothing older still fails
+  honestly. Daily studies stop exactly as before.
+- **OHLC bars follow the zoom.** An OHLC or high-low bar was drawn with a
+  one-pixel stroke at every zoom, so zoomed-in bar charts were thin threads
+  between wide gaps. The stroke is now a fifth of the bar spacing, and the
+  open and close ticks share its weight, centred on their prices. Packed bars
+  keep their exact pixels: below about ten pixels of spacing nothing changes,
+  so default and zoomed-out views look as they did.
+
+### Security
+
+- Development dependencies only: the published package still has no runtime
+  dependencies, so no installed chart was exposed. `vitest` 4.1.11 to 4.1.12
+  with `@vitest/mocker` (GHSA-qxg6-89mg-rqv8, GHSA-xp26-3454-mjgp), `vite`
+  8.2.2 to 8.2.4 (GHSA-587h-7wmj-h5pm, GHSA-9jrq-w75r-8gcw,
+  GHSA-rq7h-c2jc-7f22, GHSA-vfpm-58rq-9qcg, GHSA-r825-w8mm-5pxw,
+  GHSA-698v-4r3x-3vcv) and `markdown-it` 14.3.2 to 14.3.3
+  (GHSA-gfr2-rv44-r23c, GHSA-vfgh-jcmw-g37q). npm's resolver stops on an
+  optional peer cycle in vite 8, so the lockfile entries were moved to the
+  patched releases directly from the registry's manifests; nothing else in
+  the tree changed.
+
+### Size
+
+The transform tier is 6.38 kB Brotli, 157 bytes more than 2.6.7 for the
+element volume. The bar stroke adds to the base engine, which Brotli still
+codes in 140.04 kB, 69 bytes under 2.6.7; the indicator tier is 44.85 kB.
+The WebGL2 tier draws the same bars in 6.99 kB, 22 bytes more. All tiers are 435.11 kB, the nine classic scripts 448.68 kB, base + trade
+156.92 kB and the widget terminal 372.31 kB. The chart-only import is 89,611
+bytes (87.51 KiB), 43 more than 2.6.7, because a plain chart can draw bars.
+Every other tier keeps its size. Budgets rise only where the measured bundle
+needs it.
+
+### Performance
+
+Five runs per version on one dedicated 4-vCPU Linux runner (AMD EPYC 9V45),
+headless Chromium 149.0.7827.55 and software GL (SwiftShader), under the
+unchanged render budgets. At 200,000 bars, the lowest Canvas 2D p95 pan, full
+zoom-out and ten-study tick are 9.2, 123.1 and 271.4 ms against 8.5, 129.1
+and 269.3 ms for 2.6.7 in the same session: the two builds measure alike,
+pan within the variation between runs and zoom-out a little faster. This
+runner was about twice as slow for both builds as in an earlier session the
+same day, which is why a release is only compared with the previous one
+timed alongside it. The bench draws candles, so the bar stroke is not on its
+path, and neither are the transforms or the warmup that changed. See the
+[same-session benchmark](https://marketcalls.github.io/openalgo-charts/benchmarks#268).
+
+### Tests
+
+11,870 engine tests across 527 files and 737 reference-host tests across 69
+files. Four new tests take a Monday warmup back to Friday, cross a four-day
+holiday weekend in at most 12 reads, cross a weekend when only two bars are
+still needed, and still reject a source with no older history; four pin the
+bar stroke, including exact unchanged pixels for packed bars. The
+higher-timeframe end-to-end tests and render parity run in Chromium, Firefox
+and WebKit in CI, and the bar stroke was also checked by eye in Chromium at
+three zoom levels against a reference. The eight new engine tests for element volume cover each transform with
+worked cases, conservation over a 2,000-bar walk, unchanged output for a
+source without volume, Heikin Ashi and Kagi unchanged, and On-Balance Volume
+and a host study on a Renko chart through history and live ticks; all but
+the two that pin unchanged behaviour fail on 2.6.7. The published 2.6.7 build
+and this one, rendered side by side in Chromium, Firefox and WebKit with the
+same Renko chart, OBV, VWAP and a host volume study: 2.6.7 shows a flat zero
+OBV, no VWAP and an empty host study; 2.6.8 shows all three, and a time-based
+control is identical in both. The reference host's volume pane now shows on
+Renko, range bars, line break and point and figure, checked in Chromium.
+OpenAlgo's full frontend suite (3,592 tests), typecheck and production build
+pass against the packed candidate. Consumer traffic is synthetic and does not
+place live broker orders.
+
 ## 2.6.7
 
 2026-10-17

@@ -963,6 +963,19 @@ test('reference selection survives hover and snapshot menus retain their chart o
   const other = (await primary.boundingBox())!;
   await page.mouse.move(other.x + other.width * 0.4, other.y + other.height * 0.35);
   expect(await page.evaluate(() => (window as any).__oac.app.focusPane)).toBe(2);
+  // The strip below is read for the frame over the chart's empty background, so
+  // nothing may be drawn under it. The fixture's bars move with the clock, and a
+  // candle that landed under the strip failed this at some times of day on any
+  // build. Start the second chart's bars well inside the plot so its left edge
+  // is background; a frame painted beneath the canvas would still be hidden.
+  await page.evaluate(async () => {
+    const app = (window as any).__oac.app;
+    const n = app.chart2.primaryBars().length;
+    const path = '/examples/yfinance/src/split.js';
+    // Forty bar widths of empty plot before the first bar.
+    (await import(path)).withoutViewportSync(() => app.chart2.setVisibleLogicalRange({ from: -40, to: n + 5 }));
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
   const edge = await page.screenshot({ clip: { x: box.x, y: box.y + 80, width: 3, height: 12 } });
   // The frame's colour as the page composites it over the chart: read from the
   // stylesheet, so the check follows the palette rather than pinning one.
@@ -1253,8 +1266,26 @@ test('reference volume settings follow each chart and update their own average',
     expect(pixels[1], theme + ' down-volume pixels').toBeGreaterThan(20);
     if (theme === 'light') await page.screenshot({ path: info.outputPath('reference-volume-average-light.png') });
   }
+  // Since 2.6.8 Renko bricks carry the volume traded while they formed, so the
+  // pane and its settings work there and plot each brick's own volume. Kagi
+  // keeps line thickness in volume, so it is the chart type left without them.
   await page.getByRole('button', { name: /^Chart type, / }).click();
   await page.getByRole('menuitemradio', { name: 'Renko', exact: true }).click();
+  await page.getByRole('button', { name: 'Chart settings (or right-click the chart)', exact: true }).click();
+  await page.locator('#cset-tabs').getByRole('button', { name: 'Volume', exact: true }).click();
+  await expect(page.locator('[data-key="volume.showMA"]')).toBeEnabled();
+  await page.locator('#cset-ok').click();
+  const bricks = await page.evaluate(() => {
+    const app = (window as any).__oac.app;
+    return { plotted: app.volume2.getData().map((bar: any) => bar.close),
+      volumes: app.chart2.primaryBars().map((bar: any) => bar.volume) };
+  });
+  expect(bricks.volumes.length).toBeGreaterThan(3);
+  expect(bricks.volumes.every((volume: unknown) => typeof volume === 'number')).toBe(true);
+  expect(bricks.plotted).toEqual(bricks.volumes);
+  await page.getByRole('button', { name: /^Chart type, / }).click();
+  await page.getByRole('menuitemradio', { name: 'Kagi', exact: true }).click();
+  expect(await page.evaluate(() => (window as any).__oac.app.volume2)).toBeNull();
   await page.getByRole('button', { name: 'Chart settings (or right-click the chart)', exact: true }).click();
   await page.locator('#cset-tabs').getByRole('button', { name: 'Volume', exact: true }).click();
   await expect(page.locator('[data-key="volume.showMA"]')).toBeDisabled();

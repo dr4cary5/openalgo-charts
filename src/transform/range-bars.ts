@@ -4,7 +4,7 @@
  * candlestick renderer. Incremental: the in-progress bar is emitted by flush().
  */
 import type { Bar } from '../model/bar';
-import { copyState, type ISeriesTransform } from './transform';
+import { addVolume, copyState, settleVolume, withVolume, type ISeriesTransform } from './transform';
 
 export interface RangeOptions {
   /** High-to-low span that closes a bar. The constructor throws unless it is above 0. */
@@ -14,6 +14,8 @@ export interface RangeOptions {
 export class RangeBarsTransform implements ISeriesTransform {
   private readonly _range: number;
   private _cur: Bar | null = null;
+  /** Volume of the bars in the bar in progress (transform.ts addVolume). */
+  private _volume = NaN;
 
   public constructor(options: RangeOptions) {
     if (options.range <= 0) throw new Error('openalgo-charts: range must be > 0');
@@ -22,6 +24,7 @@ export class RangeBarsTransform implements ISeriesTransform {
 
   public reset(): void {
     this._cur = null;
+    this._volume = NaN;
   }
 
   public clone(): RangeBarsTransform {
@@ -33,6 +36,7 @@ export class RangeBarsTransform implements ISeriesTransform {
 
   public push(bar: Bar): Bar[] {
     const p = bar.close;
+    this._volume = addVolume(this._volume, bar);
     const out: Bar[] = [];
     if (this._cur === null) {
       this._cur = { time: bar.time, open: p, high: p, low: p, close: p };
@@ -46,13 +50,15 @@ export class RangeBarsTransform implements ISeriesTransform {
       out.push(this._cur);
       this._cur = null;
     }
+    this._volume = settleVolume(out, this._volume);
     return out;
   }
 
   public flush(): Bar[] {
     if (this._cur === null) return [];
-    const c = this._cur;
+    const c = withVolume(this._cur, this._volume);
     this._cur = null;
+    this._volume = NaN;
     return [c];
   }
 }

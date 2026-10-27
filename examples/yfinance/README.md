@@ -668,8 +668,15 @@ moving average (period, colour, thickness and line style). The average shares
 the histogram's scale, keeps warmup and missing-volume gaps, and follows live
 replacement/append and the displayed replay prefix. Its settings survive reload
 and returning from a transformed chart. Heikin Ashi retains volume and matches
-its displayed candle colours. Transforms without a per-bar volume mapping
-disable these controls with a reason. Volume colours follow candle
+its displayed candle colours. Since 2.6.8 Renko, range bars, line break and
+point and figure elements carry the volume traded while they formed, so the
+pane, these controls and volume studies (On-Balance Volume, VWAP) work there
+too; a live tick redraws the whole histogram, since one tick can complete
+several bricks or withdraw a forming one. Kagi keeps line thickness in
+`volume`, so it shows no volume pane and disables these controls with a
+reason. To check this locally, run `python server.py --fixture`, pick Renko
+from the chart type menu and add On-Balance Volume and VWAP from Indicators.
+Volume colours follow candle
 overrides, previous-close direction and theme changes. The daily-change readout
 also uses displayed bars during replay.
 

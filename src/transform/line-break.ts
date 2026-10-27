@@ -4,7 +4,7 @@
  * candlestick renderer (each line = a body). Incremental.
  */
 import type { Bar } from '../model/bar';
-import { copyState, type ISeriesTransform } from './transform';
+import { addVolume, copyState, withVolume, type ISeriesTransform } from './transform';
 
 export interface LineBreakOptions {
   /** Prior lines a close must break to draw a new one. Below 1 counts as 1. */
@@ -19,6 +19,8 @@ interface LineBox {
 export class LineBreakTransform implements ISeriesTransform {
   private readonly _n: number;
   private _lines: LineBox[] = [];
+  /** Volume of the bars pushed since the last line (transform.ts addVolume). */
+  private _volume = NaN;
 
   public constructor(options: LineBreakOptions = { lines: 3 }) {
     this._n = Math.max(1, options.lines);
@@ -26,6 +28,7 @@ export class LineBreakTransform implements ISeriesTransform {
 
   public reset(): void {
     this._lines = [];
+    this._volume = NaN;
   }
 
   public clone(): LineBreakTransform {
@@ -36,6 +39,7 @@ export class LineBreakTransform implements ISeriesTransform {
 
   public push(bar: Bar): Bar[] {
     const p = bar.close;
+    this._volume = addVolume(this._volume, bar);
     if (this._lines.length === 0) {
       this._lines.push({ open: p, close: p });
       return [];
@@ -56,6 +60,8 @@ export class LineBreakTransform implements ISeriesTransform {
     // Only the last N lines decide a break, so the rest are dropped: a copy per
     // live tick then costs N lines, not every line since the history began.
     if (this._lines.length > this._n) this._lines.splice(0, this._lines.length - this._n);
-    return [{ time: bar.time, open: box.open, high: Math.max(box.open, box.close), low: Math.min(box.open, box.close), close: box.close }];
+    const line = withVolume({ time: bar.time, open: box.open, high: Math.max(box.open, box.close), low: Math.min(box.open, box.close), close: box.close }, this._volume);
+    this._volume = NaN;
+    return [line];
   }
 }

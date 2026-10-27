@@ -22,7 +22,7 @@
  * is the only way variable-box modes can render correctly).
  */
 import type { Bar } from '../model/bar';
-import { copyState, type ISeriesTransform } from './transform';
+import { addVolume, copyState, withVolume, type ISeriesTransform } from './transform';
 
 export type PointFigureMethod = 'hl' | 'close';
 export type PointFigureBoxMode = 'fixed' | 'percent' | 'atr' | 'atrPercent';
@@ -108,6 +108,8 @@ export class PointFigureTransform implements ISeriesTransform {
   private _top = NaN;
   private _bot = NaN;
   private _time = 0;
+  /** Volume of the bars in the column in progress (transform.ts addVolume). */
+  private _volume = NaN;
 
   public constructor(options: PointFigureOptions) {
     const mode = options.mode ?? 'fixed';
@@ -138,6 +140,7 @@ export class PointFigureTransform implements ISeriesTransform {
     this._top = NaN;
     this._bot = NaN;
     this._time = 0;
+    this._volume = NaN;
     this._atr.reset();
   }
 
@@ -185,6 +188,11 @@ export class PointFigureTransform implements ISeriesTransform {
   public push(bar: Bar): Bar[] {
     if (this._mode === 'atr' || this._mode === 'atrPercent') this._atr.push(bar);
 
+    // The bar that reverses opens the next column, so its volume is held back
+    // from the column it completes.
+    const before = this._volume;
+    this._volume = addVolume(this._volume, bar);
+
     const useHl = this._method === 'hl';
     const upPrice = useHl ? bar.high : bar.close;
     const downPrice = useHl ? bar.low : bar.close;
@@ -224,7 +232,8 @@ export class PointFigureTransform implements ISeriesTransform {
         // Boundary = bottom edge of the X column's highest box; the O column
         // starts at the box just below it, re-derived under the new box size.
         const boundary = this._top * this._box;
-        out.push(this._column());
+        out.push(withVolume(this._column(), before));
+        this._volume = addVolume(NaN, bar);
         this._box = this._resolveBox(downPrice);
         this._top = Math.ceil(boundary / this._box) - 1;
         this._bot = Math.floor(downPrice / this._box);
@@ -237,7 +246,8 @@ export class PointFigureTransform implements ISeriesTransform {
       } else if (hb - this._bot >= this._reversal) {
         // Boundary = top edge of the O column's lowest box.
         const boundary = (this._bot + 1) * this._box;
-        out.push(this._column());
+        out.push(withVolume(this._column(), before));
+        this._volume = addVolume(NaN, bar);
         this._box = this._resolveBox(upPrice);
         this._bot = Math.floor(boundary / this._box);
         this._top = Math.floor(upPrice / this._box);
@@ -251,6 +261,6 @@ export class PointFigureTransform implements ISeriesTransform {
   public flush(): Bar[] {
     // Nothing to emit until a direction (and therefore a real column) exists.
     if (this._dir === 0 || Number.isNaN(this._top)) return [];
-    return [this._column()];
+    return [withVolume(this._column(), this._volume)];
   }
 }

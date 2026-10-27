@@ -17,7 +17,7 @@ import { initHover } from './hover.js';
 import { fillIntervalSelect, clampPeriod, rangeLoad, ensureIntervalOption } from './intervals.js';
 import { initFeed, fetchBars, fetchNote, feedErrorState } from './feed.js';
 import { attachReferenceTimeframes, referenceTimeframePreferences } from './timeframes.js';
-import { chartTypeSeries, inChartTransforms, keepsView } from './transforms.js';
+import { chartTypeSeries, inChartTransforms, keepsView, showsVolume } from './transforms.js';
 import { isExpression, fetchExpressionBars, mountOperatorKeypad, referenceDataContext } from './expression.js';
 import { initStatus, nameOf, symbolStatus } from './status.js';
 import { requestVariant, sessionOf, sessionLabel } from './session.js';
@@ -102,8 +102,8 @@ if (!inChartTransforms) MISSING.push('in-chart transforms');
  * comparisons) lives here rather than on the chart.
  */
 const app = {
-  // The chart and its two series. `volume` is null on a chart whose transform
-  // forms elements at times of its own (all but Heikin Ashi).
+  // The chart and its two series. `volume` is null on a Kagi chart, whose
+  // elements keep line thickness in `volume` (transforms.js showsVolume).
   chart: null,
   price: null,
   volume: null,
@@ -304,7 +304,7 @@ function render({ keepView = true, state } = {}) {
   // The chart rounds a dragged price alert by the same bands, since the axis
   // grid alone accepts prices a coarse band does not trade at.
   app.chart.setTickSchedule?.(app.ticks);
-  attachVolume(1, !isTransform || sel === 't:heikin-ashi');
+  attachVolume(1, showsVolume(sel));
   if (!isTransform) {
     app.markersApi = app.price.createMarkers();
     app.markersApi.setMarkers(app.fills);

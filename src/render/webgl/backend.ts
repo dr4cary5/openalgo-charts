@@ -50,7 +50,7 @@ import type { IRenderBackend } from '../backend';
 import {
   candleGeometry, candleTier, optimalBarWidth, resolveCandleStyle, type CandleStyle,
 } from '../candles';
-import { barGeometry } from '../bars';
+import { barGeometry, barStrokeWidth } from '../bars';
 import {
   project, projectSteps, trimToView, dashPeriod, polyline, dashFor, pointColors, CLOSE, HIGH, LOW, EDGE_PAD, HLC_AREA_BAND_COLOR,
   type Polyline,
@@ -353,8 +353,11 @@ function emitBars(
   batch: VertexBatch, items: readonly DrawItem[], toY: (v: number) => number,
   barSpacing: number, dpr: number, style: SeriesStyle, highLowOnly: boolean, color: ColorOf,
 ): void {
-  const tick = Math.max(1, Math.floor(optimalBarWidth(barSpacing, dpr) / 2));
-  const lw = Math.max(1, Math.floor(dpr));
+  // The same stroke and centred ticks as the Canvas 2D `drawBars`, so the two
+  // backends paint one bar at every zoom.
+  const lw = barStrokeWidth(barSpacing, dpr);
+  const half = Math.floor(lw / 2);
+  const tick = Math.max(1, Math.floor(optimalBarWidth(barSpacing, dpr) / 2), half + 1);
   for (let i = 0; i < items.length; i++) {
     const item = items[i]!; // i, and i - 1 when positive, index items
     const g = barGeometry(item, toY, dpr);
@@ -363,10 +366,10 @@ function emitBars(
       ? item.bar.close >= ref
       : g.up;
     const c = color(item.bar.color ?? (up ? (style.upColor ?? '#26a69a') : (style.downColor ?? '#ef5350')));
-    batch.rect(g.cx - Math.floor(lw / 2), g.yHigh, lw, Math.max(1, g.yLow - g.yHigh), c);
+    batch.rect(g.cx - half, g.yHigh, lw, Math.max(1, g.yLow - g.yHigh), c);
     if (!highLowOnly) {
-      batch.rect(g.cx - tick, g.yOpen, tick, lw, c);
-      batch.rect(g.cx, g.yClose, tick, lw, c);
+      batch.rect(g.cx - tick, g.yOpen - half, tick, lw, c);
+      batch.rect(g.cx, g.yClose - half, tick, lw, c);
     }
   }
 }

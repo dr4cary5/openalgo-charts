@@ -29,7 +29,7 @@
   {
     "name": "Transform tier (Renko/Range/P&F/Kagi/Line-break/HA + symbol arithmetic)",
     "path": "dist/openalgo-charts.transform.mjs",
-    "limit": "6.23 kB",
+    "limit": "6.39 kB",
     "brotli": true
   },
   {
@@ -41,7 +41,7 @@
   {
     "name": "WebGL2 tier (GPU series backend)",
     "path": "dist/openalgo-charts.webgl.mjs",
-    "limit": "6.97 kB",
+    "limit": "6.99 kB",
     "brotli": true
   },
   {
@@ -86,7 +86,7 @@
       "dist/openalgo-charts.widget.mjs",
       "dist/openalgo-charts.workspace.mjs"
     ],
-    "limit": "435.01 kB",
+    "limit": "435.12 kB",
     "brotli": true
   },
   {
@@ -102,13 +102,13 @@
       "dist/openalgo-charts.widget.standalone.js",
       "dist/openalgo-charts.workspace.standalone.js"
     ],
-    "limit": "448.42 kB",
+    "limit": "448.69 kB",
     "brotli": true
   },
   {
     "name": "Base classic script (openalgo-charts.standalone.js)",
     "path": "dist/openalgo-charts.standalone.js",
-    "limit": "140.05 kB",
+    "limit": "140.11 kB",
     "brotli": true
   },
   {

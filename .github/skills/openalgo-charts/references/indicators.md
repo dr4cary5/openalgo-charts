@@ -16,9 +16,14 @@ before `from`, in addition to the requested range. A provider advertises
 `createRequestedIndicator` includes warmup in request identity and cancellation.
 
 The timeframe provider counts actual observations, pages until enough history or
-explicit exhaustion. Four consecutive empty windows without an exhaustion hint
-produce a retryable insufficient-history error, so a new listing cannot trigger
-hundreds of empty reads. It also rejects after 512 pages or 100,000 observations rather
+explicit exhaustion. Each window asks for the bars still needed, so an intraday
+warmup window is a few hours and a weekend or holiday is many empty windows in a
+row: since 2.6.8 each empty window doubles the next (up to 64 times), and only an
+empty run of at least four windows spanning more than 30 days, with no exhaustion
+hint, produces a retryable insufficient-history error. Before 2.6.8 four empty
+windows alone did, so a chart whose history began right after a weekend showed
+that error instead of the study. A new listing still cannot trigger hundreds of
+empty reads. It also rejects after 512 pages or 100,000 observations rather
 than fabricating history. It retains a stable confirmed seed across advancing
 windows. Its bounded memo (24 series, 250,000 bars, five-minute lifetime) never
 retains a forming or unknown-availability tail as immutable history. Tail refreshes
