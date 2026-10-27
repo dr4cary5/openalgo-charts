@@ -963,6 +963,19 @@ test('reference selection survives hover and snapshot menus retain their chart o
   const other = (await primary.boundingBox())!;
   await page.mouse.move(other.x + other.width * 0.4, other.y + other.height * 0.35);
   expect(await page.evaluate(() => (window as any).__oac.app.focusPane)).toBe(2);
+  // The strip below is read for the frame over the chart's empty background, so
+  // nothing may be drawn under it. The fixture's bars move with the clock, and a
+  // candle that landed under the strip failed this at some times of day on any
+  // build. Start the second chart's bars well inside the plot so its left edge
+  // is background; a frame painted beneath the canvas would still be hidden.
+  await page.evaluate(async () => {
+    const app = (window as any).__oac.app;
+    const n = app.chart2.primaryBars().length;
+    const path = '/examples/yfinance/src/split.js';
+    // Forty bar widths of empty plot before the first bar.
+    (await import(path)).withoutViewportSync(() => app.chart2.setVisibleLogicalRange({ from: -40, to: n + 5 }));
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
   const edge = await page.screenshot({ clip: { x: box.x, y: box.y + 80, width: 3, height: 12 } });
   // The frame's colour as the page composites it over the chart: read from the
   // stylesheet, so the check follows the palette rather than pinning one.
