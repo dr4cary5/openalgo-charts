@@ -119,3 +119,66 @@ describe('independent timeframe snapshots', () => {
     f.feed.destroy();
   });
 });
+
+describe('warmup across a weekend or a holiday', () => {
+  // An intraday study pages back in windows sized to the bars it still needs:
+  // eighteen 15-minute bars is a four and a half hour window. Before 2.6.8 four
+  // empty windows in a row ended the warmup with "insufficient history", so a
+  // chart whose history began on a Monday could never reach Friday's bars,
+  // and a 15-minute EMA on a 5-minute chart showed an error instead of a line.
+  const M15 = 900;
+  const weekdays = new SessionCalendar({ timezone: 'UTC', sessions: ['1330-2000:23456'] });
+  /** Fifteen-minute bars 13:30 to 20:00 UTC on the given days. */
+  const sessionBars = (days: string[]): Bar[] => days.flatMap(d => {
+    const open = Date.parse(`${d}T13:30:00Z`) / 1000;
+    return Array.from({ length: 26 }, (_, i) => ({ time: open + i * M15, open: 100 + i, high: 101 + i, low: 99 + i, close: 100.5 + i }));
+  });
+  const provider = (input: Bar[]) => {
+    const getBars = vi.fn(async (r: BarsRequest) => input.filter(bar => bar.time >= r.from! && bar.time < r.to!));
+    const feed = withTimeframes({ getBars }, { market: () => ({ key: 'us', calendar: weekdays, sources: [
+      { interval: '15m', bounds: time => ({ time, from: time, to: time + M15 }) },
+    ] }) });
+    return { feed, getBars, provider: createTimeframeProvider(feed, { availability: bar => ({ at: bar.time + M15, confirmed: true }) }) };
+  };
+  const monday = Date.parse('2026-09-28T13:30:00Z') / 1000;
+  const warmupReq = (from: number): IndicatorSnapshotRequest => ({ symbol: 'AAPL', exchange: 'US', interval: '15m', from, to: from + 26 * M15, warmupBars: 18 });
+
+  it('crosses a weekend to reach the Friday before a Monday', async () => {
+    const f = provider(sessionBars(['2026-09-23', '2026-09-24', '2026-09-25', '2026-09-28']));
+    const result = await f.provider.requestSnapshot!(warmupReq(monday));
+    const before = result.bars.filter(bar => bar.time < monday);
+    expect(before.length).toBeGreaterThanOrEqual(18);
+    expect(new Date(before[before.length - 1]!.time * 1000).toISOString()).toBe('2026-09-25T19:45:00.000Z');
+    f.feed.destroy();
+  });
+
+  it('crosses a long holiday weekend, still in a handful of reads', async () => {
+    // Thursday, then a Friday holiday and the weekend: four days without a bar.
+    const f = provider(sessionBars(['2026-09-23', '2026-09-24', '2026-09-28']));
+    const result = await f.provider.requestSnapshot!(warmupReq(monday));
+    expect(result.bars.filter(bar => bar.time < monday).length).toBeGreaterThanOrEqual(18);
+    expect(f.getBars.mock.calls.length).toBeLessThanOrEqual(12);
+    f.feed.destroy();
+  });
+
+  it('crosses a weekend even when only a couple of bars are still needed', async () => {
+    // The first window finds part of the warmup, so the rest asks for two
+    // bars: windows of half an hour, doubling, cover only seven and a half
+    // hours in four reads. The weekend still has to be crossed.
+    const f = provider(sessionBars(['2026-09-24', '2026-09-25', '2026-09-28']));
+    const from = monday + M15;
+    const result = await f.provider.requestSnapshot!({ ...warmupReq(from), warmupBars: 3 });
+    const before = result.bars.filter(bar => bar.time < from);
+    expect(before.length).toBeGreaterThanOrEqual(3);
+    // Across the weekend: Friday's bars are in the warmup.
+    expect(before.some(bar => new Date(bar.time * 1000).toISOString().startsWith('2026-09-25'))).toBe(true);
+    f.feed.destroy();
+  });
+
+  it('still says honestly that there is no older history, after a bounded number of reads', async () => {
+    const f = provider(sessionBars(['2026-09-28']));
+    await expect(f.provider.requestSnapshot!(warmupReq(monday))).rejects.toThrow(/Insufficient confirmed history/);
+    expect(f.getBars.mock.calls.length).toBeLessThanOrEqual(60);
+    f.feed.destroy();
+  });
+});

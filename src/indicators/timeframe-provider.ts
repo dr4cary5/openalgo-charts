@@ -29,6 +29,11 @@ function alive(req: IndicatorSnapshotRequest): void {
   if (req.signal?.aborted) throw req.signal.reason;
 }
 
+/** An empty run of warmup windows longer than this, in seconds, means the source has no older history. */
+const EMPTY_SPAN = 30 * 86400;
+/** The most an empty warmup window grows the next one by, so a single read stays bounded. */
+const MAX_EMPTY_GROWTH = 64;
+
 /** Independent, bounded confirmed history, shared requests and a refreshable forming tail. */
 export function createTimeframeProvider(feed: TimeframeFeed, options: TimeframeProviderOptions): IndicatorBarsProviderAccess {
   const pool = sharedHistoryRequests(feed), cache = new Map<string, Entry>();
@@ -77,19 +82,34 @@ export function createTimeframeProvider(feed: TimeframeFeed, options: TimeframeP
     let result = snapshot(bars.filter(bar => bar.time < req.to), req);
     const eligible = (): number => result.bars.filter((bar, i) => bar.time < req.from
       && result.confirmed[i] && result.availableAt[i] !== null && result.availableAt[i]! <= req.from).length;
-    let emptyPages = 0;
+    // A window is sized to the bars still needed, so eighteen 15-minute bars
+    // is four and a half hours: a weekend or a holiday is many empty windows in
+    // a row. Each empty one doubles the next, and history is only declared
+    // missing once the empty run is four windows long and spans more than
+    // EMPTY_SPAN, so a closed market is crossed in a few reads while a source
+    // with nothing older still fails honestly. A daily window already spans
+    // weeks, so daily warmup stops after four empty windows as it always did.
+    let emptyPages = 0, emptySince = cursor, growth = 1;
     for (let calls = 0; eligible() < warmup && !exhausted; calls++) {
       if (calls >= 512 || bars.length >= 100_000) throw new Error('Timeframe warmup history limit reached');
-      const page = await pool.getBarsPage({ ...base, before: cursor, countBack: Math.max(1, warmup - eligible()) });
+      const before = cursor;
+      const page = await pool.getBarsPage({ ...base, before, countBack: Math.max(1, warmup - eligible()) * growth });
       bars = merge(page.bars, bars);
       const next = page.nextBefore ?? page.bars[0]?.time;
       exhausted = page.hasMore === false || (plan.source.earliest !== undefined && next !== undefined && next <= plan.source.earliest);
       if (!exhausted && (next === undefined || next >= cursor)) throw new Error('Warmup history page did not advance');
-      emptyPages = page.bars.length === 0 ? emptyPages + 1 : 0;
-      // An empty holiday window is not exhaustion. Repeated empty windows with
-      // no source horizon need an honest retryable failure, not hundreds of reads.
-      if (!exhausted && emptyPages >= 4) throw new Error('Insufficient confirmed history: four consecutive source windows are empty');
+      if (page.bars.length === 0) {
+        if (emptyPages === 0) emptySince = before;
+        emptyPages++;
+        growth = Math.min(growth * 2, MAX_EMPTY_GROWTH);
+      } else {
+        emptyPages = 0;
+        growth = 1;
+      }
       if (next !== undefined) cursor = Math.min(cursor, next);
+      if (!exhausted && emptyPages >= 4 && emptySince - cursor > EMPTY_SPAN) {
+        throw new Error('Insufficient confirmed history: no source bars in more than 30 days before the warmup');
+      }
       result = snapshot(bars.filter(bar => bar.time < req.to), req);
     }
     alive(req);
