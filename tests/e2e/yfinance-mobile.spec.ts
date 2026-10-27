@@ -1253,8 +1253,26 @@ test('reference volume settings follow each chart and update their own average',
     expect(pixels[1], theme + ' down-volume pixels').toBeGreaterThan(20);
     if (theme === 'light') await page.screenshot({ path: info.outputPath('reference-volume-average-light.png') });
   }
+  // Since 2.6.8 Renko bricks carry the volume traded while they formed, so the
+  // pane and its settings work there and plot each brick's own volume. Kagi
+  // keeps line thickness in volume, so it is the chart type left without them.
   await page.getByRole('button', { name: /^Chart type, / }).click();
   await page.getByRole('menuitemradio', { name: 'Renko', exact: true }).click();
+  await page.getByRole('button', { name: 'Chart settings (or right-click the chart)', exact: true }).click();
+  await page.locator('#cset-tabs').getByRole('button', { name: 'Volume', exact: true }).click();
+  await expect(page.locator('[data-key="volume.showMA"]')).toBeEnabled();
+  await page.locator('#cset-ok').click();
+  const bricks = await page.evaluate(() => {
+    const app = (window as any).__oac.app;
+    return { plotted: app.volume2.getData().map((bar: any) => bar.close),
+      volumes: app.chart2.primaryBars().map((bar: any) => bar.volume) };
+  });
+  expect(bricks.volumes.length).toBeGreaterThan(3);
+  expect(bricks.volumes.every((volume: unknown) => typeof volume === 'number')).toBe(true);
+  expect(bricks.plotted).toEqual(bricks.volumes);
+  await page.getByRole('button', { name: /^Chart type, / }).click();
+  await page.getByRole('menuitemradio', { name: 'Kagi', exact: true }).click();
+  expect(await page.evaluate(() => (window as any).__oac.app.volume2)).toBeNull();
   await page.getByRole('button', { name: 'Chart settings (or right-click the chart)', exact: true }).click();
   await page.locator('#cset-tabs').getByRole('button', { name: 'Volume', exact: true }).click();
   await expect(page.locator('[data-key="volume.showMA"]')).toBeDisabled();

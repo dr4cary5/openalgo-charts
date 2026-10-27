@@ -93,7 +93,11 @@ test('a range loads the interval and period its sessions need, then places the l
   await chooseSymbol(page, 'RELIANCE.NS');
   await page.locator('.host-bottombar .oac-bottombar__range[data-range="1D"]').click();
   await expect.poll(() => app(page, 'app.bottombar.controls.range()'), { timeout: 15_000 }).toBe('1D');
-  expect(await app(page, 'app.req.interval + "/" + app.req.period')).toBe('5m/5d');
+  // The shortest period that reaches back to the session's open: one day once
+  // today's session has begun, five while the last one is days back (before the
+  // open, a Monday morning, a weekend). Which applies depends on when the suite
+  // runs; the open being on the chart, checked below, is what the range needs.
+  expect(['5m/1d', '5m/5d']).toContain(await app(page, 'app.req.interval + "/" + app.req.period'));
   await expect(page.locator('.host-bottombar .oac-bottombar__range[data-range="1D"]')).toHaveAttribute('aria-pressed', 'true');
   // The view runs from the 09:15 open of the last bar's session to that bar.
   // Early in the day the session holds fewer bars than the closest zoom can
@@ -115,7 +119,9 @@ test('a range loads the interval and period its sessions need, then places the l
   expect(Math.ceil(placed.from)).toBeLessThanOrEqual(placed.open);
   expect(placed.to).toBeGreaterThanOrEqual(placed.last);
   if (placed.fits) {
-    expect(Math.ceil(placed.from)).toBe(placed.open);
+    // With one day loaded the open is the first bar, and a view starting a
+    // fraction before it rounds up to -0, which toBe tells apart from 0.
+    expect(Math.ceil(placed.from) + 0).toBe(placed.open);
     expect(Math.floor(placed.to)).toBe(placed.last);
   } else {
     // Zoomed in as far as the plot allows, not out past what the session needs.
