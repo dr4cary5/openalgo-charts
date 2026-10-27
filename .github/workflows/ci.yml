@@ -154,7 +154,7 @@ jobs:
         # its own last code commit; once its tag is pushed the ref is emptied,
         # because the tag then paints the same pixels.
         env:
-          PARITY_BASELINE_REF: '11e6372ac230ae3031d412fd233aaa96f3d1af52'
+          PARITY_BASELINE_REF: '99473e8cb2783b01914a25a49d89bc8063372a4b'
         run: |
           ref="${PARITY_BASELINE_REF:-$(git describe --tags --abbrev=0 --match 'v[0-9]*' HEAD)}"
           echo "render-parity baseline: $ref"
