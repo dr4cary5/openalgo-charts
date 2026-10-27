@@ -75,12 +75,13 @@ needs it.
 Five runs per version on one dedicated 4-vCPU Linux runner (AMD EPYC 9V45),
 headless Chromium 149.0.7827.55 and software GL (SwiftShader), under the
 unchanged render budgets. At 200,000 bars, the lowest Canvas 2D p95 pan, full
-zoom-out and ten-study tick are 8.4, 129.3 and 277.3 ms against 8.5, 133.2
-and 272.8 ms for 2.6.7 in the same session: the two builds measure alike.
-This runner was about twice as slow for both builds as in an earlier session
-the same day, which is why a release is only compared with the previous one
-timed alongside it. The bar stroke changes only wide spacings, and the
-transforms and warmup that changed are not on the measured path. See the
+zoom-out and ten-study tick are 9.2, 123.1 and 271.4 ms against 8.5, 129.1
+and 269.3 ms for 2.6.7 in the same session: the two builds measure alike,
+pan within the variation between runs and zoom-out a little faster. This
+runner was about twice as slow for both builds as in an earlier session the
+same day, which is why a release is only compared with the previous one
+timed alongside it. The bench draws candles, so the bar stroke is not on its
+path, and neither are the transforms or the warmup that changed. See the
 [same-session benchmark](https://marketcalls.github.io/openalgo-charts/benchmarks#268).
 
 ### Tests
