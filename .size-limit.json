@@ -102,13 +102,13 @@
       "dist/openalgo-charts.widget.standalone.js",
       "dist/openalgo-charts.workspace.standalone.js"
     ],
-    "limit": "448.60 kB",
+    "limit": "448.68 kB",
     "brotli": true
   },
   {
     "name": "Base classic script (openalgo-charts.standalone.js)",
     "path": "dist/openalgo-charts.standalone.js",
-    "limit": "140.07 kB",
+    "limit": "140.11 kB",
     "brotli": true
   },
   {

@@ -18,7 +18,7 @@ Source of truth: `package.json` (`exports`, `sideEffects`, `files`), `rollup.con
 
 | Specifier | Emitted file | Contents | Brotli measured / limit | Import has side effects |
 |---|---|---|---|---|
-| `openalgo-charts` | `dist/openalgo-charts.mjs` | engine, 13 chart types, indicator + chart-type registries, primitives, feeds, trading controller, shortcuts, TimeNavigator, `ReplayController`, comparison controller, appearance links, grouped timeline events, settings schema, chart timezone | 140.11 kB / 140.05 kB | no |
+| `openalgo-charts` | `dist/openalgo-charts.mjs` | engine, 13 chart types, indicator + chart-type registries, primitives, feeds, trading controller, shortcuts, TimeNavigator, `ReplayController`, comparison controller, appearance links, grouped timeline events, settings schema, chart timezone | 140.11 kB / 140.04 kB | no |
 | `openalgo-charts/trade` | `dist/openalgo-charts.trade.mjs` | order/position/bracket primitives, DOM ladder, `OrderEngine`, `TradeController`, `FakeBroker` | 16.88 kB standalone; 156.99 kB limit for base + trade | no |
 | `openalgo-charts/transform` | `dist/openalgo-charts.transform.mjs` | Renko, Range, Point & Figure, Kagi, Line Break, Heikin Ashi, `runTransform`, symbol arithmetic (`parseExpression`, `evaluateExpression`) | 6.39 kB / 6.38 kB | **yes**, registers the `point-figure` and `kagi` chart types and the six series transforms |
 | `openalgo-charts/profile` | `dist/openalgo-charts.profile.mjs` | Volume Profile, TPO / Market Profile, Footprint, orderflow | 20.83 kB / 20.83 kB | no |
@@ -160,7 +160,7 @@ Enforced by `npm run size` (`size-limit`, Brotli, `@size-limit/file`), from `.si
 
 | Budget row | Files measured | Limit | Measured |
 |---|---|---|---|
-| Base engine | `openalgo-charts.mjs` | 140.11 kB | 140.05 kB |
+| Base engine | `openalgo-charts.mjs` | 140.11 kB | 140.04 kB |
 | Base + trade layer | base + `trade.mjs` | 156.99 kB | 156.92 kB |
 | Indicator tier | `indicators.mjs` | 44.86 kB | 44.85 kB |
 | Draw tier | `draw.mjs` | 58.45 kB | 58.44 kB |
@@ -169,11 +169,11 @@ Enforced by `npm run size` (`size-limit`, Brotli, `@size-limit/file`), from `.si
 | WebGL2 tier | `webgl.mjs` | 6.97 kB | 6.97 kB |
 | Widget tier | `widget.mjs` | 128.98 kB | 128.98 kB |
 | Widget first-use parts | `widget.<part>-<hash>.mjs`, eight files | 21.00 kB | 21.00 kB |
-| Widget terminal | base + `draw.mjs` + `indicators.mjs` + `widget.mjs` | 372.39 kB | 372.32 kB |
+| Widget terminal | base + `draw.mjs` + `indicators.mjs` + `widget.mjs` | 372.39 kB | 372.31 kB |
 | Workspace tier | `workspace.mjs` | 11.73 kB | 11.73 kB |
-| Everything | all nine bundles | 435.11 kB | 435.10 kB |
-| Script tags | the nine classic-script files | 448.60 kB | 448.60 kB |
-| Base classic script | `openalgo-charts.standalone.js` | 140.07 kB | 140.07 kB |
+| Everything | all nine bundles | 435.11 kB | 435.09 kB |
+| Script tags | the nine classic-script files | 448.68 kB | 448.67 kB |
+| Base classic script | `openalgo-charts.standalone.js` | 140.11 kB | 140.10 kB |
 | Widget classic script | `openalgo-charts.widget.standalone.js`, first-use parts inlined | 142.32 kB | 142.31 kB |
 
 Version 2.1.2 raises the full-package budget from 187 KB to 188 KB for the feed, indicator lifecycle and recovery fixes. Version 2.1.3 raises base, widget and widget-terminal ceilings to 68 KB, 37 KB and 157 KB for navigation controls, and the chart-only tree-shaking ceiling to 45 KiB. Version 2.1.6 raises the base, base-plus-trade, widget-terminal and total ceilings
@@ -323,4 +323,4 @@ Version 2.6.4 is an order flow release: an untraded row inside a footprint bar c
 
 Version 2.6.7 adds source planning and resampling to the base, independent confirmed history to the indicator tier, and custom interval controls to the widget. The base measures 140.11 kB, indicators 44.85 kB, widget 128.98 kB, terminal 372.38 kB and all tiers 435.01 kB. The chart-only import measures 89,568 bytes (87.47 KiB), up 131 bytes for optional bar-availability context and the version; feed orchestration and the UI shake out. Each budget is the first hundredth of a decimal kB that covers its measured bundle.
 
-Version 2.6.8 gives the elements of Renko, range bars, line break and point and figure the volume traded while they formed, so volume studies compute on them. That adds 157 bytes to the transform tier (6.38 kB, budget 6.39 kB), and so to all tiers (435.10 kB, budget 435.11 kB) and the nine classic scripts (448.60 kB). The base engine is byte for byte the 2.6.7 file but for its version string, which Brotli codes 61 bytes smaller (140.05 kB) and the base classic script 24 bytes larger (140.07 kB); base plus trade is 156.92 kB and the terminal 372.32 kB. The chart-only import is unchanged at 89,568 bytes (87.47 KiB).
+Version 2.6.8 gives the elements of Renko, range bars, line break and point and figure the volume traded while they formed, so volume studies compute on them, lets higher-timeframe warmup cross weekends and holidays, and draws an OHLC bar's stroke at a weight that follows the zoom. The transform tier grows 157 bytes (6.38 kB, budget 6.39 kB). The bar stroke is in the base engine, which Brotli still codes 69 bytes under 2.6.7 (140.04 kB); its classic script grows 55 bytes (140.10 kB, budget 140.11 kB) and the nine classic scripts measure 448.67 kB (budget 448.68 kB). All tiers are 435.09 kB (budget 435.11 kB), base plus trade 156.92 kB and the terminal 372.31 kB. The chart-only import is 89,611 bytes (87.51 KiB), 43 more than 2.6.7, because a plain chart can draw bars; its exact ceiling follows.

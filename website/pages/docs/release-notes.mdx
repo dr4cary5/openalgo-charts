@@ -12,7 +12,7 @@ The full, authoritative changelog lives in
 
 2026-10-27
 
-Volume studies on price-driven charts, and the development toolchain past its open security advisories.
+Volume studies on price-driven charts, higher-timeframe studies after a weekend, bar charts that follow the zoom, and the development toolchain past its open security advisories.
 
 ### Fixed
 
@@ -35,6 +35,23 @@ Volume studies on price-driven charts, and the development toolchain past its op
   element for its own volume pane can now read the element's `volume`
   instead (every transform but Kagi).
 
+- **Higher-timeframe studies after a weekend or holiday.** A study on
+  another timeframe (a 15 minute EMA on a 5 minute chart) warms up from
+  history fetched in windows of a few hours, and gave up with "Insufficient
+  confirmed history" after four empty windows. A weekend is many of those, so
+  whenever the chart's history began right after a weekend or a holiday the
+  study showed that error instead of its line. An empty window now doubles
+  the next, and history is only declared missing when the empty stretch also
+  spans more than 30 days, so weekends, long weekends and holidays are
+  crossed in a few reads while a source with nothing older still fails
+  honestly. Daily studies stop exactly as before.
+- **OHLC bars follow the zoom.** An OHLC or high-low bar was drawn with a
+  one-pixel stroke at every zoom, so zoomed-in bar charts were thin threads
+  between wide gaps. The stroke is now a fifth of the bar spacing, and the
+  open and close ticks share its weight, centred on their prices. Packed bars
+  keep their exact pixels: below about ten pixels of spacing nothing changes,
+  so default and zoomed-out views look as they did.
+
 ### Security
 
 - Development dependencies only: the published package still has no runtime
@@ -51,31 +68,37 @@ Volume studies on price-driven charts, and the development toolchain past its op
 ### Size
 
 The transform tier is 6.38 kB Brotli, 157 bytes more than 2.6.7 for the
-element volume, so all tiers are 435.10 kB and the nine classic scripts
-448.60 kB. The base engine is byte for byte the 2.6.7 file but for its
-version string, which Brotli codes in 140.05 kB (61 bytes smaller); base +
-trade is 156.92 kB and the widget terminal 372.32 kB. Every other tier keeps
-its size, and the chart-only import is unchanged at 89,568 bytes (87.47 KiB),
-so a chart that applies no transform pays nothing for the fix. Budgets rise
-only where the measured bundle needs it.
+element volume. The bar stroke adds to the base engine, which Brotli still
+codes in 140.04 kB, 69 bytes under 2.6.7; the indicator tier is 44.85 kB.
+All tiers are 435.09 kB, the nine classic scripts 448.67 kB, base + trade
+156.92 kB and the widget terminal 372.31 kB. The chart-only import is 89,611
+bytes (87.51 KiB), 43 more than 2.6.7, because a plain chart can draw bars.
+Every other tier keeps its size. Budgets rise only where the measured bundle
+needs it.
 
 ### Performance
 
 Five runs per version on one dedicated 4-vCPU Linux runner (AMD EPYC 9V45),
 headless Chromium 149.0.7827.55 and software GL (SwiftShader), under the
 unchanged render budgets. At 200,000 bars, the lowest Canvas 2D p95 pan, full
-zoom-out and ten-study tick are 4.6, 66.5 and 175.7 ms against 3.8, 61.7
-and 186.2 ms for 2.6.7 in the same session. The rendering path is the 2.6.7 base
-engine byte for byte apart from its version string, and the transforms that
-changed are not on it, so these differences are run to run variation, which
-on this runner reaches a fifth of a cell between sessions; they show neither a
-slowdown nor a speedup. See the
+zoom-out and ten-study tick are 8.4, 129.3 and 277.3 ms against 8.5, 133.2
+and 272.8 ms for 2.6.7 in the same session: the two builds measure alike.
+This runner was about twice as slow for both builds as in an earlier session
+the same day, which is why a release is only compared with the previous one
+timed alongside it. The bar stroke changes only wide spacings, and the
+transforms and warmup that changed are not on the measured path. See the
 [same-session benchmark](https://marketcalls.github.io/openalgo-charts/benchmarks#268).
 
 ### Tests
 
-11,862 engine tests across 526 files and 737 reference-host tests across 69
-files. The eight new engine tests cover each transform's element volume with
+11,870 engine tests across 527 files and 737 reference-host tests across 69
+files. Four new tests take a Monday warmup back to Friday, cross a four-day
+holiday weekend in at most 12 reads, cross a weekend when only two bars are
+still needed, and still reject a source with no older history; four pin the
+bar stroke, including exact unchanged pixels for packed bars. The
+higher-timeframe end-to-end tests and render parity run in Chromium, Firefox
+and WebKit in CI, and the bar stroke was also checked by eye in Chromium at
+three zoom levels against a reference. The eight new engine tests for element volume cover each transform with
 worked cases, conservation over a 2,000-bar walk, unchanged output for a
 source without volume, Heikin Ashi and Kagi unchanged, and On-Balance Volume
 and a host study on a Renko chart through history and live ticks; all but
