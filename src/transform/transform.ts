@@ -42,6 +42,38 @@ export function copyState<T extends object>(transform: T): T {
 }
 
 /**
+ * The volume traded while an element formed. A price-driven element is many
+ * source bars, or a part of one, so a study reading volume on it needs the sum
+ * of the bars pushed since the element before it. Without it every volume study
+ * on a brick chart read nothing and drew a flat zero. NaN means no bar has
+ * reported a volume, which leaves elements without one, as they always were: an
+ * index, or a feed that sends no volume, draws and computes exactly as before.
+ */
+export function addVolume(sum: number, bar: Bar): number {
+  const v = bar.volume;
+  if (typeof v !== 'number' || !Number.isFinite(v) || v < 0) return sum;
+  return Number.isNaN(sum) ? v : sum + v;
+}
+
+/**
+ * Give the elements one bar completed their volume: the tally on the first,
+ * 0 on the rest, so a running total such as OBV keeps counting instead of
+ * turning NaN. Returns the tally the next element starts from.
+ */
+export function settleVolume(out: Bar[], sum: number): number {
+  if (out.length === 0) return sum;
+  if (!Number.isNaN(sum)) {
+    for (let i = 0; i < out.length; i++) out[i] = { ...out[i]!, volume: i === 0 ? sum : 0 };
+  }
+  return NaN;
+}
+
+/** `element` carrying `sum` as its volume, or unchanged when no bar reported one. */
+export function withVolume(element: Bar, sum: number): Bar {
+  return Number.isNaN(sum) ? element : { ...element, volume: sum };
+}
+
+/**
  * Make times strictly increasing (collisions bumped by +1s) so the DataLayer
  * assigns one logical index per element. Labels stay within a few seconds of
  * the real formation time.

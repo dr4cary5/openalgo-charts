@@ -18,7 +18,7 @@
  * form bricks the close never reaches.
  */
 import type { Bar } from '../model/bar';
-import { copyState, type ISeriesTransform } from './transform';
+import { addVolume, copyState, settleVolume, type ISeriesTransform } from './transform';
 import { WilderAtr, type PointFigureBoxMode } from './point-figure';
 
 export interface RenkoOptions {
@@ -45,6 +45,8 @@ export class RenkoTransform implements ISeriesTransform {
   private readonly _atr: WilderAtr;
   private _box = NaN;
   private _edge = NaN; // price level of the last brick's far edge
+  /** Volume of the bars pushed since the last brick (transform.ts addVolume). */
+  private _volume = NaN;
 
   public constructor(options: RenkoOptions) {
     this._mode = options.mode ?? 'fixed';
@@ -60,6 +62,7 @@ export class RenkoTransform implements ISeriesTransform {
   public reset(): void {
     this._box = NaN;
     this._edge = NaN;
+    this._volume = NaN;
     this._atr.reset();
   }
 
@@ -87,6 +90,7 @@ export class RenkoTransform implements ISeriesTransform {
 
   public push(bar: Bar): Bar[] {
     if (this._mode === 'atr' || this._mode === 'atrPercent') this._atr.push(bar);
+    this._volume = addVolume(this._volume, bar);
     const out: Bar[] = [];
     if (Number.isNaN(this._edge)) {
       this._box = this._resolve(bar.close);
@@ -110,6 +114,7 @@ export class RenkoTransform implements ISeriesTransform {
         this._box = this._resolve(lo);
       }
     }
+    this._volume = settleVolume(out, this._volume);
     return out;
   }
 }
