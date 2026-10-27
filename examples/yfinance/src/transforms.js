@@ -20,6 +20,15 @@ export const inChartTransforms = typeof engine.getSeriesTransform === 'function'
 // settings dialogs (box-settings.js) and kept per transform, so a Renko set
 // up once is still set up after a detour through candles.
 
+/**
+ * Whether a chart type's drawn elements carry the volume traded while they
+ * formed, which is what the volume pane plots. Since 2.6.8 every transform
+ * does but Kagi: its elements keep line thickness in `volume`, so a pane there
+ * would plot ones and zeros. On a dist before 2.6.8 the bricks carry none and
+ * the pane is simply empty.
+ */
+export const showsVolume = (sel) => sel !== 't:kagi';
+
 /** The option each sizing method reads its one number from. */
 export const SIZE_KEY = { fixed: 'boxSize', percent: 'percent', atr: 'atrMultiplier', atrPercent: 'percent' };
 const ATR_MODES = ['atr', 'atrPercent'];

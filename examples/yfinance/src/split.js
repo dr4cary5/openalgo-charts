@@ -16,7 +16,7 @@ import { openContextMenu, closeMenu } from './menus.js';
 import { attachVolume, refreshVolume, setVolumeLegend, applyVolumeSettings, volumeValues } from './volume.js';
 import { referenceDataContext, isExpression, fetchExpressionBars } from './expression.js';
 import { requestVariant, sessionOf } from './session.js';
-import { chartTypeSeries, savedTransforms } from './transforms.js';
+import { chartTypeSeries, savedTransforms, showsVolume } from './transforms.js';
 import { chartDecorationsForRebuild, normalizeLegendIconSize, restorePrimaryStyle } from './chart-settings.js';
 import { bindIndicatorSource } from './indicator-source.js';
 import { openSettings, renderIndicatorChips, watchStudyStatus } from './indicators.js';
@@ -305,7 +305,6 @@ export function buildChart2({ keepView = true, typeChanged = false, state } = {}
   });
   app.chart2.addPrimitive(app.symbolLegend2);
   const chartType = app.p2.chartType || 'candlestick';
-  const transformed = chartType.startsWith('t:');
   // The chart applies the transform to the raw bars, as on the main chart.
   const { type, transform } = chartTypeSeries(chartType, app.p2.transforms);
   const style = type === 'baseline'
@@ -316,7 +315,7 @@ export function buildChart2({ keepView = true, typeChanged = false, state } = {}
   app.chart2.dataLayer.setSessionCalendar?.(sessionCalendarFor(app.p2.symbol));
   app.chart2.setPriceScaleOptions({ minMove: axisMinMove(app.p2.symbol, /\.(NS|BO)$/i.test(app.p2.symbol) ? 0.05 : 0.01) });
   app.chart2.setTickSchedule?.(tickScheduleFor(app.p2.symbol));
-  attachVolume(2, !transformed || chartType === 't:heikin-ashi');
+  attachVolume(2, showsVolume(chartType));
   app.chart2.subscribeCrosshairMove((e) => setPane2Legend(e.bar ?? app.chart2.primaryBars().at(-1)));
   attachReplay(app.chart2, 2, setPane2Legend);
   setPane2Legend(app.chart2.primaryBars().at(-1));

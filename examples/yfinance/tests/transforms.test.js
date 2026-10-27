@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getSeriesTransform } from '/dist/openalgo-charts.mjs';
-import { BOX_DEFAULTS, boxFields, boxOptions, chartTypeSeries, inChartTransforms, keepsView, sameType, savedTransforms } from '../src/transforms.js';
+import { BOX_DEFAULTS, boxFields, boxOptions, chartTypeSeries, inChartTransforms, keepsView, sameType, savedTransforms, showsVolume } from '../src/transforms.js';
 
 const PF_QUARTER = { mode: 'percent', percent: 0.25, reversal: 2, method: 'close' };
 
@@ -97,5 +97,14 @@ describe('saved transform options', () => {
       { 'point-figure': { mode: 'percent', percent: 'one' } }, { 'point-figure': { reversal: 1.5 } }, { renko: { method: 'open' } }]) {
       expect(savedTransforms({ transforms }), JSON.stringify(transforms)).toBeNull();
     }
+  });
+});
+
+describe('volume pane by chart type', () => {
+  it('shows volume on every chart type but Kagi, whose elements keep line thickness in volume', () => {
+    for (const sel of ['candlestick', 'line', 't:heikin-ashi', 't:renko', 't:range', 't:line-break', 't:point-figure']) {
+      expect(showsVolume(sel), sel).toBe(true);
+    }
+    expect(showsVolume('t:kagi')).toBe(false);
   });
 });
