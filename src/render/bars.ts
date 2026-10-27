@@ -39,6 +39,18 @@ export function barGeometry(item: BarDrawItem, toY: (v: number) => number, dpr: 
   };
 }
 
+/**
+ * Device px of an OHLC bar's stroke at this spacing: a fifth of the spacing,
+ * and never under a device pixel. Packed bars stay hairlines, exactly as they
+ * always drew; as zooming in gives each bar room, the range and both ticks
+ * grow bolder with it, so a zoomed-in bar chart reads as bars rather than as
+ * threads between wide gaps. Below ten media px of spacing at a pixel ratio of
+ * one this is the one pixel stroke of before.
+ */
+export function barStrokeWidth(barSpacing: number, dpr: number): number {
+  return Math.max(Math.max(1, Math.floor(dpr)), Math.floor(barSpacing * dpr * 0.2));
+}
+
 /** OHLC bars: vertical high to low, left tick = open, right tick = close. */
 export function drawBars(
   ctx: CanvasRenderingContext2D,
@@ -49,8 +61,11 @@ export function drawBars(
   style: SeriesStyle,
   highLowOnly = false,
 ): void {
-  const tick = Math.max(1, Math.floor(optimalBarWidth(barSpacing, dpr) / 2));
-  const lw = Math.max(1, Math.floor(dpr));
+  const lw = barStrokeWidth(barSpacing, dpr);
+  // The stroke and the ticks share one weight, each tick centred on its price,
+  // and a tick always shows past the stroke on its own side.
+  const half = Math.floor(lw / 2);
+  const tick = Math.max(1, Math.floor(optimalBarWidth(barSpacing, dpr) / 2), half + 1);
   ctx.save();
   for (let i = 0; i < items.length; i++) {
     const item = items[i]!; // i, and i - 1 when positive, index items
@@ -76,10 +91,10 @@ export function drawBars(
     // open tick and close tick are one glyph.
     ctx.fillStyle = item.bar.color
       ?? (up ? (style.upColor ?? '#26a69a') : (style.downColor ?? '#ef5350'));
-    ctx.fillRect(cx - Math.floor(lw / 2), yHigh, lw, Math.max(1, yLow - yHigh));
+    ctx.fillRect(cx - half, yHigh, lw, Math.max(1, yLow - yHigh));
     if (!highLowOnly) {
-      ctx.fillRect(cx - tick, yOpen, tick, lw); // open tick (left)
-      ctx.fillRect(cx, yClose, tick, lw); // close tick (right)
+      ctx.fillRect(cx - tick, yOpen - half, tick, lw); // open tick (left)
+      ctx.fillRect(cx, yClose - half, tick, lw); // close tick (right)
     }
   }
   ctx.restore();
