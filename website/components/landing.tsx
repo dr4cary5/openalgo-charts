@@ -341,8 +341,8 @@ const widget = createWidget('#terminal', {
 // Brotli sizes and release-bench frame times shown on the home page. They change
 // with every release: CLAUDE.md lists them among the files a size change or a
 // release benchmark updates.
-const STATS = { release: '2.6.7', base: '140.11 kB', terminal: '372.38 kB' } as const;
-const BENCH = { release: '2.6.7', pan: '4 ms', zoomOut: '56.7 ms', tick: '175.5 ms' } as const;
+const STATS = { release: '2.6.8', base: '140.05 kB', terminal: '372.32 kB' } as const;
+const BENCH = { release: '2.6.8', pan: '4.6 ms', zoomOut: '66.5 ms', tick: '175.7 ms' } as const;
 
 export function Integrate() {
   return (

@@ -42,6 +42,47 @@ Volume studies on price-driven charts, and the development toolchain past its op
   patched releases directly from the registry's manifests; nothing else in
   the tree changed.
 
+### Size
+
+The transform tier is 6.38 kB Brotli, 157 bytes more than 2.6.7 for the
+element volume, so all tiers are 435.10 kB and the nine classic scripts
+448.60 kB. The base engine is byte for byte the 2.6.7 file but for its
+version string, which Brotli codes in 140.05 kB (61 bytes smaller); base +
+trade is 156.92 kB and the widget terminal 372.32 kB. Every other tier keeps
+its size, and the chart-only import is unchanged at 89,568 bytes (87.47 KiB),
+so a chart that applies no transform pays nothing for the fix. Budgets rise
+only where the measured bundle needs it.
+
+### Performance
+
+Five runs per version on one dedicated 4-vCPU Linux runner (AMD EPYC 9V45),
+headless Chromium 149.0.7827.55 and software GL (SwiftShader), under the
+unchanged render budgets. At 200,000 bars, the lowest Canvas 2D p95 pan, full
+zoom-out and ten-study tick are 4.6, 66.5 and 175.7 ms against 3.8, 61.7
+and 186.2 ms for 2.6.7 in the same session. The rendering path is the 2.6.7 base
+engine byte for byte apart from its version string, and the transforms that
+changed are not on it, so these differences are run to run variation, which
+on this runner reaches a fifth of a cell between sessions; they show neither a
+slowdown nor a speedup. See the
+[same-session benchmark](https://marketcalls.github.io/openalgo-charts/benchmarks#268).
+
+### Tests
+
+11,862 engine tests across 526 files and 737 reference-host tests across 69
+files. The eight new engine tests cover each transform's element volume with
+worked cases, conservation over a 2,000-bar walk, unchanged output for a
+source without volume, Heikin Ashi and Kagi unchanged, and On-Balance Volume
+and a host study on a Renko chart through history and live ticks; all but
+the two that pin unchanged behaviour fail on 2.6.7. The published 2.6.7 build
+and this one, rendered side by side in Chromium, Firefox and WebKit with the
+same Renko chart, OBV, VWAP and a host volume study: 2.6.7 shows a flat zero
+OBV, no VWAP and an empty host study; 2.6.8 shows all three, and a time-based
+control is identical in both. The reference host's volume pane now shows on
+Renko, range bars, line break and point and figure, checked in Chromium.
+OpenAlgo's full frontend suite (3,592 tests), typecheck and production build
+pass against the packed candidate. Consumer traffic is synthetic and does not
+place live broker orders.
+
 ## 2.6.7
 
 2026-10-17
