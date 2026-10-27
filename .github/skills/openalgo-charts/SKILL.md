@@ -64,7 +64,7 @@ Import only what you use. Each tier is a separate entry point, so a feature you 
 | `openalgo-charts/transform` | Heikin Ashi, Renko, Range bars, Line Break, Point and Figure, Kagi | 6.38 kB |
 | `openalgo-charts/profile` | Volume Profile, Market Profile (TPO), Footprint, order flow | 20.83 kB |
 | `openalgo-charts/trade` | Order engine, state machine, order/position/bracket lines, DOM ladder | 156.92 kB with base |
-| `openalgo-charts/webgl` | The WebGL2 series backend behind `renderer: 'auto' \| 'webgl2'`; composites into the pane's canvas, falls back to 2D for the session on context loss | 6.97 kB |
+| `openalgo-charts/webgl` | The WebGL2 series backend behind `renderer: 'auto' \| 'webgl2'`; composites into the pane's canvas, falls back to 2D for the session on context loss | 6.99 kB |
 | `openalgo-charts/widget` | `createWidget`: the chart with a top bar, drawing rail, responsive mobile controls with drawing search, tool groups and shared Favorites, status line, settings and indicator dialogs with Running studies first, drawing properties, event details, right-click menu, keymap and optional persistence. The only tier that ships DOM; imports the draw tier itself | 128.98 kB |
 | `openalgo-charts/workspace` | Portable workspace/template documents, asynchronous catalog repository and atomic IndexedDB adapter; no UI or market data | 11.73 kB |
 

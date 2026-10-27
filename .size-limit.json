@@ -41,7 +41,7 @@
   {
     "name": "WebGL2 tier (GPU series backend)",
     "path": "dist/openalgo-charts.webgl.mjs",
-    "limit": "6.97 kB",
+    "limit": "6.99 kB",
     "brotli": true
   },
   {
@@ -86,7 +86,7 @@
       "dist/openalgo-charts.widget.mjs",
       "dist/openalgo-charts.workspace.mjs"
     ],
-    "limit": "435.11 kB",
+    "limit": "435.12 kB",
     "brotli": true
   },
   {
@@ -102,7 +102,7 @@
       "dist/openalgo-charts.widget.standalone.js",
       "dist/openalgo-charts.workspace.standalone.js"
     ],
-    "limit": "448.68 kB",
+    "limit": "448.69 kB",
     "brotli": true
   },
   {

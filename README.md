@@ -187,11 +187,11 @@ Unused optional tiers stay out of the base chart download.
 | `openalgo-charts/transform` | Heikin Ashi, Renko, Range bars, Line Break, Point &amp; Figure, Kagi, and symbol arithmetic (`AAPL/MSFT`) | 6.38 kB |
 | `openalgo-charts/profile` | Volume Profile, Market Profile (TPO) with compact pixel letters, Footprint, order flow | 20.83 kB |
 | `openalgo-charts/trade` | Order, position and bracket tools, account state, order preview and position commands, plus a depth-of-market ladder | 16.88 kB |
-| `openalgo-charts/webgl` | GPU drawing for supported series, with Canvas 2D fallback | 6.97 kB |
+| `openalgo-charts/webgl` | GPU drawing for supported series, with Canvas 2D fallback | 6.99 kB |
 | `openalgo-charts/widget` | `createWidget`: toolbar, bottom bar, Data, Objects, Watchlist and News dock, account summary, symbol search, dialogs, mobile controls, a shortcuts editor, saved layouts, the chart grid (`createChartGrid`) and optional persistence in IndexedDB | 128.98 kB |
 | `openalgo-charts/workspace` | Validated workspace and indicator-template documents, named watchlists, named catalogs with revision checks, asynchronous storage and an IndexedDB adapter; no DOM | 11.73 kB |
 
-Everything together is **435.09 kB Brotli**; a widget terminal with built-in indicators (base + draw + indicators + widget) is 372.31 kB. The widget's eight first-use parts (the shortcuts editor, the Layouts menu, the templates list, the chart data dialog, the chart type settings dialog, the grid bar and its menus, and the IndexedDB store) add 21.00 kB in files of their own, fetched only when a widget first uses one. The nine classic-script files together are 448.67 kB. Figures are measured from the 2.6.8 release build. The trade tier is 16.88 kB on its own; base + trade costs 156.92 kB. Sizes use decimal kB.
+Everything together is **435.11 kB Brotli**; a widget terminal with built-in indicators (base + draw + indicators + widget) is 372.31 kB. The widget's eight first-use parts (the shortcuts editor, the Layouts menu, the templates list, the chart data dialog, the chart type settings dialog, the grid bar and its menus, and the IndexedDB store) add 21.00 kB in files of their own, fetched only when a widget first uses one. The nine classic-script files together are 448.68 kB. Figures are measured from the 2.6.8 release build. The trade tier is 16.88 kB on its own; base + trade costs 156.92 kB. Sizes use decimal kB.
 
 ## What's built
 
@@ -523,13 +523,13 @@ Enforced in CI by [`size-limit`](./.size-limit.json). Nothing is excluded, becau
 | Draw tier | 58.45 kB | 58.44 kB |
 | Transform tier | 6.39 kB | 6.38 kB |
 | Profile tier | 20.83 kB | 20.83 kB |
-| WebGL2 tier | 6.97 kB | 6.97 kB |
+| WebGL2 tier | 6.99 kB | 6.99 kB |
 | Widget tier | 128.98 kB | 128.98 kB |
 | Widget first-use parts (eight files beside the widget tier) | 21.00 kB | 21.00 kB |
 | Widget terminal (base + draw + indicators + widget) | 372.39 kB | 372.31 kB |
 | Workspace tier | 11.73 kB | 11.73 kB |
-| Script tags (the nine classic-script files) | 448.68 kB | 448.67 kB |
-| **Everything** | 435.11 kB | 435.09 kB |
+| Script tags (the nine classic-script files) | 448.69 kB | 448.68 kB |
+| **Everything** | 435.12 kB | 435.11 kB |
 
 ## Documentation
 

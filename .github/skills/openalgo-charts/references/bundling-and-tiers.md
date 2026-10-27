@@ -24,7 +24,7 @@ Source of truth: `package.json` (`exports`, `sideEffects`, `files`), `rollup.con
 | `openalgo-charts/profile` | `dist/openalgo-charts.profile.mjs` | Volume Profile, TPO / Market Profile, Footprint, orderflow | 20.83 kB / 20.83 kB | no |
 | `openalgo-charts/indicators` | `dist/openalgo-charts.indicators.mjs` | 112 Tier-1 built-ins plus the Tier-2 contract | 44.85 kB / 44.86 kB | **yes**, registers all 112 descriptors |
 | `openalgo-charts/draw` | `dist/openalgo-charts.draw.mjs` | 87 drawing tools including Anchored VWAP and fixed-range Volume Profile, `DrawingController`, `DrawingLinkGroup`, `DrawingLayer` | 58.44 kB / 58.45 kB | **yes**, registers every built-in tool |
-| `openalgo-charts/webgl` | `dist/openalgo-charts.webgl.mjs` | the WebGL2 series backend, `createWebGL2Backend`, `isWebGL2Supported`, `WebGL2Backend`, `GlDevice` | 6.97 kB / 6.97 kB | **yes**, registers the `webgl2` render backend |
+| `openalgo-charts/webgl` | `dist/openalgo-charts.webgl.mjs` | the WebGL2 series backend, `createWebGL2Backend`, `isWebGL2Supported`, `WebGL2Backend`, `GlDevice` | 6.99 kB / 6.99 kB | **yes**, registers the `webgl2` render backend |
 | `openalgo-charts/widget` | `dist/openalgo-charts.widget.mjs` | `createWidget`, the chrome (top bar, rail, status line, toasts), the dialogs, event details, the keymap, the tokens and stylesheet; the only tier that ships DOM. Imports `openalgo-charts/draw` itself | 128.98 kB / 128.98 kB; first-use parts 21.00 kB / 21.00 kB | **yes**, registers the nine dialog mounts with the shell |
 | `openalgo-charts/workspace` | `dist/openalgo-charts.workspace.mjs` | Validated workspace and template documents, `WorkspaceRepository`, revision conflicts and an IndexedDB adapter | 11.73 kB / 11.73 kB | no |
 
@@ -166,13 +166,13 @@ Enforced by `npm run size` (`size-limit`, Brotli, `@size-limit/file`), from `.si
 | Draw tier | `draw.mjs` | 58.45 kB | 58.44 kB |
 | Transform tier | `transform.mjs` | 6.39 kB | 6.38 kB |
 | Profile tier | `profile.mjs` | 20.83 kB | 20.83 kB |
-| WebGL2 tier | `webgl.mjs` | 6.97 kB | 6.97 kB |
+| WebGL2 tier | `webgl.mjs` | 6.99 kB | 6.99 kB |
 | Widget tier | `widget.mjs` | 128.98 kB | 128.98 kB |
 | Widget first-use parts | `widget.<part>-<hash>.mjs`, eight files | 21.00 kB | 21.00 kB |
 | Widget terminal | base + `draw.mjs` + `indicators.mjs` + `widget.mjs` | 372.39 kB | 372.31 kB |
 | Workspace tier | `workspace.mjs` | 11.73 kB | 11.73 kB |
-| Everything | all nine bundles | 435.11 kB | 435.09 kB |
-| Script tags | the nine classic-script files | 448.68 kB | 448.67 kB |
+| Everything | all nine bundles | 435.12 kB | 435.11 kB |
+| Script tags | the nine classic-script files | 448.69 kB | 448.68 kB |
 | Base classic script | `openalgo-charts.standalone.js` | 140.11 kB | 140.10 kB |
 | Widget classic script | `openalgo-charts.widget.standalone.js`, first-use parts inlined | 142.32 kB | 142.31 kB |
 
@@ -323,4 +323,4 @@ Version 2.6.4 is an order flow release: an untraded row inside a footprint bar c
 
 Version 2.6.7 adds source planning and resampling to the base, independent confirmed history to the indicator tier, and custom interval controls to the widget. The base measures 140.11 kB, indicators 44.85 kB, widget 128.98 kB, terminal 372.38 kB and all tiers 435.01 kB. The chart-only import measures 89,568 bytes (87.47 KiB), up 131 bytes for optional bar-availability context and the version; feed orchestration and the UI shake out. Each budget is the first hundredth of a decimal kB that covers its measured bundle.
 
-Version 2.6.8 gives the elements of Renko, range bars, line break and point and figure the volume traded while they formed, so volume studies compute on them, lets higher-timeframe warmup cross weekends and holidays, and draws an OHLC bar's stroke at a weight that follows the zoom. The transform tier grows 157 bytes (6.38 kB, budget 6.39 kB). The bar stroke is in the base engine, which Brotli still codes 69 bytes under 2.6.7 (140.04 kB); its classic script grows 55 bytes (140.10 kB, budget 140.11 kB) and the nine classic scripts measure 448.67 kB (budget 448.68 kB). All tiers are 435.09 kB (budget 435.11 kB), base plus trade 156.92 kB and the terminal 372.31 kB. The chart-only import is 89,611 bytes (87.51 KiB), 43 more than 2.6.7, because a plain chart can draw bars; its exact ceiling follows.
+Version 2.6.8 gives the elements of Renko, range bars, line break and point and figure the volume traded while they formed, so volume studies compute on them, lets higher-timeframe warmup cross weekends and holidays, and draws an OHLC bar's stroke at a weight that follows the zoom. The transform tier grows 157 bytes (6.38 kB, budget 6.39 kB). The bar stroke is in the base engine, which Brotli still codes 69 bytes under 2.6.7 (140.04 kB); its classic script grows 55 bytes (140.10 kB, budget 140.11 kB) and the nine classic scripts measure 448.68 kB (budget 448.69 kB). The WebGL2 tier draws the same bars, 22 bytes more (6.99 kB, budget 6.99 kB). All tiers are 435.11 kB (budget 435.12 kB), base plus trade 156.92 kB and the terminal 372.31 kB. The chart-only import is 89,611 bytes (87.51 KiB), 43 more than 2.6.7, because a plain chart can draw bars; its exact ceiling follows.
